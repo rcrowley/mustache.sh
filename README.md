@@ -41,8 +41,8 @@ TODO
 * Partials.
 * Set delimeter.
 
-TODONE
-------
+TODONE!
+-------
 
 * Variable tags.
 * Section tags.
