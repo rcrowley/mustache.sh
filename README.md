@@ -48,3 +48,8 @@ TODONE
 * Section tags.
 * Inverted section tags.
 * Comment tags.
+
+License
+-------
+
+`mustache.sh` is [BSD-licensed](https://github.com/rcrowley/mustache.sh/blob/master/LICENSE).
