@@ -3,6 +3,8 @@ mustache.sh
 
 [Mustache](http://mustache.github.com/) in [POSIX shell](http://pubs.opengroup.org/onlinepubs/9699919799/utilities/contents.html).
 
+There's (as of this writing) only one call to a non-builtin (`sed`(1)) which is probably enough to claim this is fast enough for most uses.
+
 Installation
 ------------
 
