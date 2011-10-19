@@ -37,6 +37,10 @@ mustache_literal() {
 mustache() {
 	_M_STATE="literal" _M_NEXT_STATE="literal" _M_FD=1
 
+	# IFS must only contain '\n' so as to be able to read space and tab
+	# characters from standard input one-at-a-time.
+	IFS="\n"
+
 	# Consuming standard input one character at a time is quite a feat
 	# within the confines of POSIX shell.  Bash's `read` builtin has
 	# `-n` for limiting the number of characters consumed.  Here it is
