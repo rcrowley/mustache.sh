@@ -1,5 +1,5 @@
 VERSION=0.0.0
-BUILD=1
+BUILD=0
 
 prefix=/usr/local
 bindir=${prefix}/bin
@@ -19,6 +19,6 @@ uninstall:
 	rm -f $(DESTDIR)$(libdir)/mustache.sh
 
 test:
-	FOO="foo" BAR="bar" bin/mustache.sh <test.mustache | diff -u - test.mustache.out
+	sh test.sh
 
 .PHONY: all clean install uninstall test

@@ -9,7 +9,7 @@ Installation
 Usage
 -----
 
-	FOO="foo" BAR="bar" sh mustache.sh <test.mustache
+	FOO="foo" BAR="bar" mustache.sh <test.mustache
 
 Spec
 ----
