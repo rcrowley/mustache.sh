@@ -4,7 +4,7 @@ mustache.sh
 Installation
 ------------
 
-Early days, yo.  It's just one file so put it on your `PATH`.
+	make && sudo make install
 
 Usage
 -----
@@ -22,6 +22,7 @@ Deviations from spec
 
 * `mustache.sh` accepts input data via the environment, not via YAML frontmatter.  This makes sense for shell programmers but may render this Mustache implementation unsuitable for other use.
 * `mustache.sh` does not descend into a new scope within <code>{{#<em>tag</em>}}</code> or <code>{{^<em>tag</em>}}</code> sections.  This again makes sense when being driven by environment variables.
+* `mustache.sh` doesn't support the `--compile` or `--tokens` command-line options and does not accept input file(s) as arguments.
 
 TODO
 ----

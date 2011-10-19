@@ -130,8 +130,3 @@ mustache() {
 
 	done
 }
-
-# Call `mustache` mustache to make this behave somewhat like `mustache`(1).
-#
-# TODO Move this to a `mustache`(1)-alike outside this library.
-mustache
