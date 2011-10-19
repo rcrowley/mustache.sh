@@ -79,7 +79,7 @@ mustache() {
 			# to the assumption that everything's a literal until proven
 			# otherwise for this character.
 			"variable")
-				eval printf "%s" "\$$_M_TAG" >&$_M_FD
+				eval printf "%s" "\"\$$_M_TAG\"" >&$_M_FD
 				mustache_literal;;
 
 			# Section tags expand to the expanded value of the section's
@@ -89,7 +89,7 @@ mustache() {
 			# Sections not being expanded are redirected to `/dev/null`.
 			"#")
 				_M_SECTION_TAG="$_M_TAG"
-				[ -n "$(eval printf "%s" "\$$_M_TAG")" ] && _M_FD=1 || _M_FD=3
+				[ -n "$(eval printf "%s" "\"\$$_M_TAG")\"" ] && _M_FD=1 || _M_FD=3
 				# TODO Make a recursive call.
 				mustache_literal;;
 
@@ -101,7 +101,7 @@ mustache() {
 			# redirected to `/dev/null`.
 			"^")
 				_M_SECTION_TAG="$_M_TAG"
-				[ -z "$(eval printf "%s" "\$$_M_TAG")" ] && _M_FD=1 || _M_FD=3
+				[ -z "$(eval printf "%s" "\"\$$_M_TAG\"")" ] && _M_FD=1 || _M_FD=3
 				# TODO Make a recursive call.
 				mustache_literal;;
 
