@@ -9,7 +9,15 @@ Installation
 Usage
 -----
 
-	FOO="foo" BAR="bar" mustache.sh <test.mustache
+From the command-line:
+
+	FOO="foo" BAR="bar" mustache.sh <"test.mustache"
+
+As a library:
+
+	. "lib/mustache.sh"
+	FOO="foo" BAR="bar"
+	mustache <"test.mustache"
 
 Spec
 ----
