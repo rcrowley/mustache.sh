@@ -38,8 +38,11 @@ mustache() {
 	_M_STATE="literal" _M_NEXT_STATE="literal" _M_FD=1
 
 	# IFS must only contain '\n' so as to be able to read space and tab
-	# characters from standard input one-at-a-time.
-	IFS="\n"
+	# characters from standard input one-at-a-time.  The easiest way to
+	# convince it to actually contain the correct byte, and only the
+	# correct byte, is to use a single-quoted literal newline.
+	IFS='
+'
 
 	# Consuming standard input one character at a time is quite a feat
 	# within the confines of POSIX shell.  Bash's `read` builtin has
@@ -48,10 +51,9 @@ mustache() {
 	# The subtlety is that real newline characters are chomped so they
 	# must be indirectly detected by checking for zero-length
 	# characters, which is done in `mustache_literal`.
-	sed -r "s/./&\n/g" | while read _M_C
-
+	sed -r "s/./&\\n/g" | while read _M_C
 	do
-		#echo " _M_C: $_M_C (${#_M_C})" | cat -A >&2
+		echo " _M_C: $_M_C (${#_M_C}), _M_STATE: $_M_STATE" >&2
 
 		case "$_M_STATE" in
 
@@ -89,7 +91,12 @@ mustache() {
 			# Sections not being expanded are redirected to `/dev/null`.
 			"#")
 				_M_SECTION_TAG="$_M_TAG"
-				[ -n "$(eval printf "%s" "\"\$$_M_TAG")\"" ] && _M_FD=1 || _M_FD=3
+				if [ -n "$(eval printf "%s" "\"\$$_M_TAG\"")" ]
+				then
+					_M_FD=1
+				else
+					_M_FD=3
+				fi
 				# TODO Make a recursive call.
 				mustache_literal;;
 
@@ -101,7 +108,12 @@ mustache() {
 			# redirected to `/dev/null`.
 			"^")
 				_M_SECTION_TAG="$_M_TAG"
-				[ -z "$(eval printf "%s" "\"\$$_M_TAG\"")" ] && _M_FD=1 || _M_FD=3
+				if [ -z "$(eval printf "%s" "\"\$$_M_TAG\"")" ]
+				then
+					_M_FD=1
+				else
+					_M_FD=3
+				fi
 				# TODO Make a recursive call.
 				mustache_literal;;
 
@@ -111,7 +123,7 @@ mustache() {
 			"/")
 				if [ "$_M_TAG" != "$_M_SECTION_TAG" ]
 				then
-					mustache_die "mismatched closing tag $_M_TAG, " \
+					mustache_die "mismatched closing tag $_M_TAG," \
 						"expected $_M_SECTION_TAG"
 				fi
 				# TODO Exit the recursive call.
