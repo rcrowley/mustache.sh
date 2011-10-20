@@ -129,12 +129,21 @@ _mustache_tag() {
 	case "$_M_TAG_TYPE" in
 
 		# Variable tags expand to the value of an environment variable
-		# or the empty string if the environment variable is unset.
+		# or the empty string if the environment variable is unset.  If
+		# the tag is surrounded by backticks, execute it as a shell
+		# command, instead, using standard output as its value.
 		#
 		# Since the variable tag has been completely consumed, return
 		# to the assumption that everything's a literal until proven
 		# otherwise for this character.
-		"variable") eval printf "%s" "\"\$$_M_TAG\"" >&$_M_FD;;
+		"variable")
+			case "$_M_TAG" in
+				"\`"*"\`")
+					_M_TAG="${_M_TAG#"\`"}"
+					_M_TAG="${_M_TAG%"\`"}"
+					sh -c "$_M_TAG" >&$_M_FD;;
+				*) eval printf "%s" "\"\$$_M_TAG\"" >&$_M_FD;;
+			esac;;
 
 		# Section tags expand to the expanded value of the section's
 		# literals and tags if and only if the section tag is in the

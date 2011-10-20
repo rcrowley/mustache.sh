@@ -36,6 +36,7 @@ Deviations from spec
 * `mustache.sh` does not descend into a new scope within <code>{{#<em>tag</em>}}</code> or <code>{{^<em>tag</em>}}</code> sections.  This again makes sense when being driven by environment variables.
 * `mustache.sh` doesn't support the `--compile` or `--tokens` command-line options and does not accept input file(s) as arguments.
 * `mustache.sh` doesn't care about escaping output as HTML.
+* `mustache.sh` will execute tag names surrounded by backticks as shell commands.
 
 TODO
 ----
