@@ -53,7 +53,7 @@ mustache() {
 	# characters, which is done in `mustache_literal`.
 	sed -r "s/./&\\n/g" | while read _M_C
 	do
-		echo " _M_C: $_M_C (${#_M_C}), _M_STATE: $_M_STATE" >&2
+		#echo " _M_C: $_M_C (${#_M_C}), _M_STATE: $_M_STATE" >&2
 
 		case "$_M_STATE" in
 
