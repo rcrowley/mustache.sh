@@ -37,11 +37,11 @@ Deviations from spec
 * `mustache.sh` doesn't support the `--compile` or `--tokens` command-line options and does not accept input file(s) as arguments.
 * `mustache.sh` doesn't care about escaping output as HTML.
 * `mustache.sh` will execute tag names surrounded by backticks as shell commands.
+* `mustache.sh` doesn't support list sections in the traditional sense: it requires the section tag be a shell command and processes the section once for each line on standard output with the line available in `_M_LINE`.
 
 TODO
 ----
 
-* List sections.  There's no way to differentiate between a list and a value with spaces in it.  This might become more clear when shell commands are supported.
 * Lambdas.  What is this I don't even.
 * Partials.  This is related to supporting shell commands as variables.
 * Set delimeter.  This would be very hard to support in general because of the pervasive assumption that tag delimeters are two characters long.
@@ -54,6 +54,7 @@ TODONE
 * Inverted section tags.
 * Comment tags.
 * Nested sections.  Recursion, motherfucker.  Do you speak it?
+* List sections.  The section tag must be a shell command.  The section is processed once for each line on standard output with the line available in `_M_LINE`.
 
 License
 -------
