@@ -1,4 +1,7 @@
-# `mustache.sh`, Mustache in POSIX shell.
+#!/bin/sh
+
+# `mustache.sh`, Mustache in POSIX shell
+# ======================================
 
 set -e
 
