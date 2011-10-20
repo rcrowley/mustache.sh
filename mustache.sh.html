@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-eqiv='content-type' content='text/html;charset=utf-8'>
+    <title>mustache.sh</title>
+    <link rel=stylesheet href="http://jashkenas.github.com/docco/resources/docco.css">
+</head>
+<body>
+<div id=container>
+    <div id=background></div>
+    <table cellspacing=0 cellpadding=0>
+    <thead>
+      <tr>
+        <th class=docs><h1>mustache.sh</h1></th>
+        <th class=code></th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr><td class='docs'><p><code>mustache.sh</code>, Mustache in POSIX shell.</p>
+
+</pre></div></td></tr><tr><td class=docs>
+
+<p>File descriptor 3 is commandeered for debug output, which may end up being
+forwarded to standard error.</p>
+
+</td><td class=code><div class=highlight><pre>
+
+<span class="nb">set</span> -e
+
+</pre></div></td></tr><tr><td class=docs>
+
+<p>File descriptor 4 is commandeered for use as a sink for literal and
+variable output of (inverted) sections that are not destined for standard
+output because their condition is not met.</p>
+
+</td><td class=code><div class=highlight><pre>
+<span class="o">[</span> -z <span class="s2">&quot;$MUSTACHE_DEBUG&quot;</span> <span class="o">]</span> <span class="o">&amp;&amp;</span> <span class="nb">exec </span>3&gt;/dev/null <span class="o">||</span> <span class="nb">exec </span>3&gt;&amp;2
+
+</pre></div></td></tr><tr><td class=docs>
+
+<p>File descriptor 5 is commandeered for capturing input for list processing.</p>
+
+</td><td class=code><div class=highlight><pre>
+<span class="nb">exec </span>4&gt;/dev/null
+
+</pre></div></td></tr><tr><td class=docs>
+
+<p>Consume standard input one character at a time to render <code>mustache</code>(5)
+templates with data from the environment.</p>
+
+</td><td class=code><div class=highlight><pre>
+<span class="nb">exec </span>5&gt;/dev/null
+
+</pre></div></td></tr><tr><td class=docs>
+
+<p>Initialize the file descriptor to be used to emit characters.  At
+times this value will be 4 to send output to <code>/dev/null</code>.</p>
+
+</td><td class=code><div class=highlight><pre>
+mustache<span class="o">()</span> <span class="o">{</span>
+
+</pre></div></td></tr><tr><td class=docs>
+
+<p>IFS must only contain '\n' so as to be able to read space and tab
+characters from standard input one-at-a-time.  The easiest way to
+convince it to actually contain the correct byte, and only the
+correct byte, is to use a single-quoted literal newline.</p>
+
+</td><td class=code><div class=highlight><pre>
+	<span class="nv">_M_FD</span><span class="o">=</span>1
+
+</pre></div></td></tr><tr><td class=docs>
+
+<p>Consuming standard input one character at a time is quite a feat
+within the confines of POSIX shell.  Bash's <code>read</code> builtin has
+<code>-n</code> for limiting the number of characters consumed.  Here it is
+faked using <code>sed</code>(1) to place each character on its own line.
+The subtlety is that real newline characters are chomped so they
+must be indirectly detected by checking for zero-length
+characters, which is done as the character is emitted.</p>
+
+</td><td class=code><div class=highlight><pre>
+	<span class="nv">IFS</span><span class="o">=</span><span class="s1">&#39;</span>
+<span class="s1">&#39;</span>
+
+</pre></div></td></tr><tr><td class=docs>
+
+<p>TODO Replace the original value of IFS.  Be careful if it's unset.</p>
+
+</td><td class=code><div class=highlight><pre>
+	sed -r <span class="s2">&quot;s/./&amp;\\n/g&quot;</span> | _mustache
+
+</pre></div></td></tr><tr><td class=docs>
+
+<p>Process the one-character-per-line stream from <code>sed</code> via a state machine.
+This function will be called recursively in subshell environments to
+isolate nested section tags from the outside environment.</p>
+
+</td><td class=code><div class=highlight><pre>
+
+<span class="o">}</span>
+
+</pre></div></td></tr><tr><td class=docs>
+
+<p>Always start by assuming a character is a literal.</p>
+
+</td><td class=code><div class=highlight><pre>
+_mustache<span class="o">()</span> <span class="o">{</span>
+
+</pre></div></td></tr><tr><td class=docs>
+
+<p>Consume a single character literal.  In the event this
+character and the previous character have been opening
+braces, progress to the "tag" state and initialize the
+tag name to the empty string (this invariant is relied
+on by the "tag" state).  If this is the first opening
+brace, wait and see.  Otherwise, emit this character.</p>
+
+</td><td class=code><div class=highlight><pre>
+	<span class="nv">_M_STATE</span><span class="o">=</span><span class="s2">&quot;literal&quot;</span>
+
+	<span class="k">while </span><span class="nb">read </span>_M_C
+	<span class="k">do</span>
+<span class="k">		</span><span class="nb">echo</span> <span class="s2">&quot; _M_C: $_M_C (${#_M_C}), _M_STATE: $_M_STATE&quot;</span> &gt;&amp;3
+		<span class="nb">echo</span> <span class="s2">&quot;$_M_C&quot;</span> &gt;&amp;5
+		<span class="k">case</span> <span class="s2">&quot;$_M_STATE&quot;</span> in
+
+</pre></div></td></tr><tr><td class=docs>
+
+<p>Consume the tag type and tag.</p>
+
+</td><td class=code><div class=highlight><pre>
+			<span class="s2">&quot;literal&quot;</span><span class="o">)</span>
+				<span class="k">case</span> <span class="s2">&quot;$_M_PREV_C$_M_C&quot;</span> in
+					<span class="s2">&quot;{{&quot;</span><span class="o">)</span> <span class="nv">_M_STATE</span><span class="o">=</span><span class="s2">&quot;tag&quot;</span> <span class="nv">_M_TAG</span><span class="o">=</span><span class="s2">&quot;&quot;</span>;;
+					*<span class="s2">&quot;{&quot;</span><span class="o">)</span> ;;
+					*<span class="o">)</span>
+						<span class="o">[</span> <span class="s2">&quot;$_M_PREV_C&quot;</span> <span class="o">=</span> <span class="s2">&quot;{&quot;</span> <span class="o">]</span> <span class="o">&amp;&amp;</span> <span class="nb">printf</span> <span class="s2">&quot;%c&quot;</span> <span class="s2">&quot;{&quot;</span>
+						<span class="o">[</span> -z <span class="s2">&quot;$_M_C&quot;</span> <span class="o">]</span> <span class="o">&amp;&amp;</span> <span class="nb">echo</span> <span class="o">||</span> <span class="nb">printf</span> <span class="s2">&quot;%c&quot;</span> <span class="s2">&quot;$_M_C&quot;</span>;;
+				<span class="k">esac</span> &gt;&amp;<span class="nv">$_M_FD</span>;;
+
+</pre></div></td></tr><tr><td class=docs>
+
+<p>A third opening brace in a row could be treated as
+a literal and the beginning of tag, as it is here,
+or as the beginning of a tag which begins with an
+opening brace.</p>
+
+</td><td class=code><div class=highlight><pre>
+			<span class="s2">&quot;tag&quot;</span><span class="o">)</span>
+				<span class="k">case</span> <span class="s2">&quot;$_M_PREV_C$_M_C&quot;</span> in
+
+</pre></div></td></tr><tr><td class=docs>
+
+<p>Note the type of this tag, defaulting to "variable".</p>
+
+</td><td class=code><div class=highlight><pre>
+					<span class="s2">&quot;{{&quot;</span><span class="o">)</span> <span class="nb">printf</span> <span class="s2">&quot;{&quot;</span> &gt;&amp;<span class="nv">$_M_FD</span>;;
+
+</pre></div></td></tr><tr><td class=docs>
+
+<p>A variable tag must note the first character of the
+variable name.  Since it's possible that an opening
+brace comes in the middle of the tag, check that
+this is indeed the beginning of the tag.</p>
+
+</td><td class=code><div class=highlight><pre>
+					<span class="s2">&quot;{#&quot;</span>|<span class="s2">&quot;{^&quot;</span>|<span class="s2">&quot;{/&quot;</span>|<span class="s2">&quot;{!&quot;</span>|<span class="s2">&quot;{&gt;&quot;</span><span class="o">)</span> <span class="nv">_M_TAG_TYPE</span><span class="o">=</span><span class="s2">&quot;$_M_C&quot;</span> <span class="nv">_M_TAG</span><span class="o">=</span><span class="s2">&quot;&quot;</span>;;
+
+</pre></div></td></tr><tr><td class=docs>
+
+<p>Two closing braces in a row closes the tag.  The
+state resets to "literal" and the tag is processed,
+possibly in a subshell.</p>
+
+</td><td class=code><div class=highlight><pre>
+					<span class="s2">&quot;{&quot;</span>*<span class="o">)</span>
+						<span class="k">if</span> <span class="o">[</span> -z <span class="s2">&quot;$_M_TAG&quot;</span> <span class="o">]</span>
+						<span class="k">then</span>
+<span class="k">							</span><span class="nv">_M_TAG_TYPE</span><span class="o">=</span><span class="s2">&quot;variable&quot;</span> <span class="nv">_M_TAG</span><span class="o">=</span><span class="s2">&quot;$_M_C&quot;</span>
+						<span class="k">fi</span>;;
+
+</pre></div></td></tr><tr><td class=docs>
+
+<p>A single closing brace is ignored at first.</p>
+
+</td><td class=code><div class=highlight><pre>
+					<span class="s2">&quot;}}&quot;</span><span class="o">)</span>
+						<span class="nv">_M_STATE</span><span class="o">=</span><span class="s2">&quot;literal&quot;</span>
+						_mustache_tag;;
+
+</pre></div></td></tr><tr><td class=docs>
+
+<p>If the variable continues, the closing brace becomes
+part of the variable name.</p>
+
+</td><td class=code><div class=highlight><pre>
+					*<span class="s2">&quot;}&quot;</span><span class="o">)</span> ;;
+
+</pre></div></td></tr><tr><td class=docs>
+
+<p>Any other character becomes part of the variable name.</p>
+
+</td><td class=code><div class=highlight><pre>
+					<span class="s2">&quot;}&quot;</span>*<span class="o">)</span> <span class="nv">_M_TAG</span><span class="o">=</span><span class="s2">&quot;$_M_TAG}&quot;</span>;;
+
+</pre></div></td></tr><tr><td class=docs>
+
+<p>This character becomes the previous character.</p>
+
+</td><td class=code><div class=highlight><pre>
+					*<span class="o">)</span> <span class="nv">_M_TAG</span><span class="o">=</span><span class="s2">&quot;$_M_TAG$_M_C&quot;</span>;;
+
+				<span class="k">esac</span>;;
+
+		<span class="k">esac</span>
+
+</pre></div></td></tr><tr><td class=docs>
+
+<p>Execute a tag surrounded by backticks.  Remove the backticks first.</p>
+
+</td><td class=code><div class=highlight><pre>
+		<span class="nv">_M_PREV_C</span><span class="o">=</span><span class="s2">&quot;$_M_C&quot;</span>
+
+	<span class="k">done</span>
+<span class="o">}</span>
+
+</pre></div></td></tr><tr><td class=docs>
+
+<p>Print an error message and GTFO.  The message is the concatenation
+of all the arguments to this function.</p>
+
+</td><td class=code><div class=highlight><pre>
+_mustache_cmd<span class="o">()</span> <span class="o">{</span>
+	<span class="nv">_M_CMD</span><span class="o">=</span><span class="s2">&quot;$*&quot;</span>
+	<span class="nv">_M_CMD</span><span class="o">=</span><span class="s2">&quot;${_M_CMD#&quot;</span><span class="se">\`</span><span class="s2">&quot;}&quot;</span>
+	<span class="nv">_M_CMD</span><span class="o">=</span><span class="s2">&quot;${_M_CMD%&quot;</span><span class="se">\`</span><span class="s2">&quot;}&quot;</span>
+	sh -c <span class="s2">&quot;$_M_CMD&quot;</span>
+<span class="o">}</span>
+
+</pre></div></td></tr><tr><td class=docs>
+
+<p>Process a complete tag.  Variables are emitted, sections are recursed
+into, comments are ignored, and (for now) partials raise an error.</p>
+
+</td><td class=code><div class=highlight><pre>
+_mustache_die<span class="o">()</span> <span class="o">{</span>
+	<span class="nb">echo</span> <span class="s2">&quot;mustache.sh: $*&quot;</span> &gt;&amp;2
+	<span class="nb">exit </span>1
+<span class="o">}</span>
+
+</pre></div></td></tr><tr><td class=docs>
+
+<p>Variable tags expand to the value of an environment variable
+or the empty string if the environment variable is unset.</p>
+
+<p>If the tag is surrounded by backticks, execute it as a shell
+command, instead, using standard output as its value.</p>
+
+<p>Since the variable tag has been completely consumed, return
+to the assumption that everything's a literal until proven
+otherwise for this character.</p>
+
+</td><td class=code><div class=highlight><pre>
+_mustache_tag<span class="o">()</span> <span class="o">{</span>
+	<span class="k">case</span> <span class="s2">&quot;$_M_TAG_TYPE&quot;</span> in
+
+</pre></div></td></tr><tr><td class=docs>
+
+<p>Section tags expand to the expanded value of the section's
+literals and tags if and only if the section tag is in the
+environment and non-empty.  Inverted section tags expand
+if the section tag is empty or unset in the environment.</p>
+
+<p>If the tag is surrounded by backticks, execute it as a shell
+command, instead, and process the section once for each line
+of standard output (made available as <code>_M_LINE</code>).</p>
+
+<p>Sections not being expanded are redirected to <code>/dev/null</code>.</p>
+
+</td><td class=code><div class=highlight><pre>
+		<span class="s2">&quot;variable&quot;</span><span class="o">)</span>
+			<span class="k">case</span> <span class="s2">&quot;$_M_TAG&quot;</span> in
+				<span class="s2">&quot;\`&quot;</span>*<span class="s2">&quot;\`&quot;</span><span class="o">)</span> _mustache_cmd <span class="s2">&quot;$_M_TAG&quot;</span>;;
+				*<span class="o">)</span> <span class="nb">eval printf</span> <span class="s2">&quot;%s&quot;</span> <span class="s2">&quot;\&quot;\$$_M_TAG\&quot;&quot;</span>;;
+			<span class="k">esac</span> &gt;&amp;<span class="nv">$_M_FD</span>;;
+
+</pre></div></td></tr><tr><td class=docs>
+
+<p>Closing tags for (inverted) sections must match the expected
+tag name.  Any redirections made when the (inverted) section
+opened are reset when the section closes.</p>
+
+</td><td class=code><div class=highlight><pre>
+		<span class="s2">&quot;#&quot;</span>|<span class="s2">&quot;^&quot;</span><span class="o">)</span>
+			<span class="nb">echo</span> <span class="s2">&quot; # _M_TAG: $_M_TAG&quot;</span> &gt;&amp;3
+			<span class="nv">_M_TAG_V</span><span class="o">=</span><span class="s2">&quot;$(eval printf &quot;</span>%s<span class="s2">&quot; &quot;</span><span class="se">\&quot;\$</span><span class="nv">$_M_TAG</span><span class="se">\&quot;</span><span class="s2">&quot;)&quot;</span>
+			<span class="k">case</span> <span class="s2">&quot;$_M_TAG_TYPE&quot;</span> in
+				<span class="s2">&quot;#&quot;</span><span class="o">)</span> <span class="o">[</span> -z <span class="s2">&quot;$_M_TAG_V&quot;</span> <span class="o">]</span> <span class="o">&amp;&amp;</span> <span class="nv">_M_FD</span><span class="o">=</span>4;;
+				<span class="s2">&quot;^&quot;</span><span class="o">)</span> <span class="o">[</span> -n <span class="s2">&quot;$_M_TAG_V&quot;</span> <span class="o">]</span> <span class="o">&amp;&amp;</span> <span class="nv">_M_FD</span><span class="o">=</span>4;;
+			<span class="k">esac</span>
+<span class="k">			case</span> <span class="s2">&quot;$_M_TAG&quot;</span> in
+				<span class="s2">&quot;\`&quot;</span>*<span class="s2">&quot;\`&quot;</span><span class="o">)</span>
+					<span class="nv">_M_CAPTURE</span><span class="o">=</span><span class="s2">&quot;$(_M_SECTION_TAG=&quot;</span><span class="nv">$_M_TAG</span><span class="s2">&quot; _mustache 5&gt;&amp;1 &gt;&amp;4)&quot;</span>
+					<span class="nb">echo</span> <span class="s2">&quot; _M_CAPTURE: $_M_CAPTURE&quot;</span> | cat -A &gt;&amp;3
+					_mustache_cmd <span class="s2">&quot;$_M_TAG&quot;</span> | <span class="k">while </span><span class="nb">read </span>_M_LINE
+					<span class="k">do</span>
+<span class="k">						</span><span class="nb">echo</span> <span class="s2">&quot; _M_LINE: $_M_LINE&quot;</span> &gt;&amp;3
+						<span class="o">(</span>
+							<span class="nv">_M_SECTION_TAG</span><span class="o">=</span><span class="s2">&quot;$_M_TAG&quot;</span>
+							<span class="nb">echo</span> <span class="s2">&quot;$_M_CAPTURE&quot;</span> | _mustache
+						<span class="o">)</span>
+					<span class="k">done</span>;;
+				*<span class="o">)</span>
+					<span class="o">(</span>
+						<span class="nv">_M_SECTION_TAG</span><span class="o">=</span><span class="s2">&quot;$_M_TAG&quot;</span>
+						_mustache
+					<span class="o">)</span>;;
+			<span class="k">esac</span>
+<span class="k">			</span><span class="nv">_M_FD</span><span class="o">=</span>1;;
+
+</pre></div></td></tr><tr><td class=docs>
+
+<p>Comments do nothing.</p>
+
+</td><td class=code><div class=highlight><pre>
+		<span class="s2">&quot;/&quot;</span><span class="o">)</span>
+			<span class="nb">echo</span> <span class="s2">&quot; / _M_TAG: $_M_TAG, _M_SECTION_TAG: $_M_SECTION_TAG&quot;</span> &gt;&amp;3
+			<span class="k">if</span> <span class="o">[</span> <span class="s2">&quot;$_M_TAG&quot;</span> !<span class="o">=</span> <span class="s2">&quot;$_M_SECTION_TAG&quot;</span> <span class="o">]</span>
+			<span class="k">then</span>
+<span class="k">				</span>_mustache_die <span class="s2">&quot;mismatched closing tag $_M_TAG,&quot;</span> <span class="se">\</span>
+					<span class="s2">&quot;expected $_M_SECTION_TAG&quot;</span>
+			<span class="k">fi</span>
+<span class="k">			</span><span class="nb">exit</span>;;
+
+</pre></div></td></tr><tr><td class=docs>
+
+<p>TODO Partials.</p>
+
+</td><td class=code><div class=highlight><pre>
+		<span class="s2">&quot;!&quot;</span><span class="o">)</span> ;;
+
+</pre></div></td></tr><tr><td class=docs>
+
+</td><td class=code><div class=highlight><pre>
+		<span class="s2">&quot;&gt;&quot;</span><span class="o">)</span> _mustache_die <span class="s2">&quot;{{&gt;$_M_TAG}} syntax not implemented&quot;</span>;;
+
+	<span class="k">esac</span>
+<span class="o">}</span>
+
+
+</pre></div></td></tr><tr><td class=docs>
+</td><td class=code><div class=highlight><pre></td><td class='code'></td></tr>
+    </tbody>
+    </table>
+</div>
+</body>
+</html>
