@@ -1,8 +1,7 @@
 #!/bin/sh
 
-# `mustache.sh`, Mustache in POSIX shell
-# ======================================
-
+# mustache.sh, Mustache in POSIX shell
+# ====================================
 set -e
 
 # File descriptor 3 is commandeered for debug output, which may end up being

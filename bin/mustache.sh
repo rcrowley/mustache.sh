@@ -1,8 +1,7 @@
 #!/bin/sh
 
-# `mustache.sh`, Mustache in POSIX shell
-# ======================================
-
+# mustache.sh, Mustache in POSIX shell
+# ====================================
 set -e
 
 # Load the `mustache` function and its friends.  These are assumed to be
