@@ -2,21 +2,24 @@
 
 set -e
 
-# File descriptor 3 is commandeered for use as a sink for literal and
+# File descriptor 3 is commandeered for debug output, which may end up being
+# forwarded to standard error.
+[ -z "$MUSTACHE_DEBUG" ] && exec 3>/dev/null || exec 3>&2
+
+# File descriptor 4 is commandeered for use as a sink for literal and
 # variable output of (inverted) sections that are not destined for standard
 # output because their condition is not met.
-exec 3>/dev/null
+exec 4>/dev/null
 
-# File descriptor 4 is commandeered for debug output, which may end up being
-# forwarded to standard error.
-[ -z "$MUSTACHE_DEBUG" ] && exec 4>/dev/null || exec 4>&2
+# File descriptor 5 is commandeered for capturing input for list processing.
+exec 5>/dev/null
 
 # Consume standard input one character at a time to render `mustache`(5)
 # templates with data from the environment.
 mustache() {
 
 	# Initialize the file descriptor to be used to emit characters.  At
-	# times this value will be 3 to send output to `/dev/null`.
+	# times this value will be 4 to send output to `/dev/null`.
 	_M_FD=1
 
 	# IFS must only contain '\n' so as to be able to read space and tab
@@ -49,7 +52,8 @@ _mustache() {
 
 	while read _M_C
 	do
-		echo " _M_C: $_M_C (${#_M_C}), _M_STATE: $_M_STATE" >&4
+		echo " _M_C: $_M_C (${#_M_C}), _M_STATE: $_M_STATE" >&3
+		echo "$_M_C" >&5
 		case "$_M_STATE" in
 
 			# Consume a single character literal.  In the event this
@@ -117,9 +121,18 @@ _mustache() {
 	done
 }
 
-# Print an error message and GTFO.
+# Execute a tag surrounded by backticks.  Remove the backticks first.
+_mustache_cmd() {
+	_M_CMD="$*"
+	_M_CMD="${_M_CMD#"\`"}"
+	_M_CMD="${_M_CMD%"\`"}"
+	sh -c "$_M_CMD"
+}
+
+# Print an error message and GTFO.  The message is the concatenation
+# of all the arguments to this function.
 _mustache_die() {
-	echo "mustache.sh: $@" >&2
+	echo "mustache.sh: $*" >&2
 	exit 1
 }
 
@@ -129,8 +142,9 @@ _mustache_tag() {
 	case "$_M_TAG_TYPE" in
 
 		# Variable tags expand to the value of an environment variable
-		# or the empty string if the environment variable is unset.  If
-		# the tag is surrounded by backticks, execute it as a shell
+		# or the empty string if the environment variable is unset.
+		#
+		# If the tag is surrounded by backticks, execute it as a shell
 		# command, instead, using standard output as its value.
 		#
 		# Since the variable tag has been completely consumed, return
@@ -138,37 +152,52 @@ _mustache_tag() {
 		# otherwise for this character.
 		"variable")
 			case "$_M_TAG" in
-				"\`"*"\`")
-					_M_TAG="${_M_TAG#"\`"}"
-					_M_TAG="${_M_TAG%"\`"}"
-					sh -c "$_M_TAG" >&$_M_FD;;
-				*) eval printf "%s" "\"\$$_M_TAG\"" >&$_M_FD;;
-			esac;;
+				"\`"*"\`") _mustache_cmd "$_M_TAG";;
+				*) eval printf "%s" "\"\$$_M_TAG\"";;
+			esac >&$_M_FD;;
 
 		# Section tags expand to the expanded value of the section's
 		# literals and tags if and only if the section tag is in the
 		# environment and non-empty.  Inverted section tags expand
 		# if the section tag is empty or unset in the environment.
 		#
+		# If the tag is surrounded by backticks, execute it as a shell
+		# command, instead, and process the section once for each line
+		# of standard output (made available as `_M_LINE`).
+		#
 		# Sections not being expanded are redirected to `/dev/null`.
 		"#"|"^")
-			echo " # _M_TAG: $_M_TAG" >&4
+			echo " # _M_TAG: $_M_TAG" >&3
 			_M_TAG_V="$(eval printf "%s" "\"\$$_M_TAG\"")"
 			case "$_M_TAG_TYPE" in
-				"#") [ -n "$_M_TAG_V" ] && _M_FD=1 || _M_FD=3;;
-				"^") [ -z "$_M_TAG_V" ] && _M_FD=1 || _M_FD=3;;
+				"#") [ -z "$_M_TAG_V" ] && _M_FD=4;;
+				"^") [ -n "$_M_TAG_V" ] && _M_FD=4;;
 			esac
-			(
-				_M_SECTION_TAG="$_M_TAG"
-				_mustache
-			)
+			case "$_M_TAG" in
+				"\`"*"\`")
+					_M_CAPTURE="$(_M_SECTION_TAG="$_M_TAG" _mustache 5>&1 >&4)"
+					echo " _M_CAPTURE: $_M_CAPTURE" | cat -A >&3
+					_mustache_cmd "$_M_TAG" | while read _M_LINE
+					do
+						echo " _M_LINE: $_M_LINE" >&3
+						(
+							_M_SECTION_TAG="$_M_TAG"
+							echo "$_M_CAPTURE" | _mustache
+						)
+					done;;
+				*)
+					(
+						_M_SECTION_TAG="$_M_TAG"
+						_mustache
+					);;
+			esac
 			_M_FD=1;;
 
 		# Closing tags for (inverted) sections must match the expected
 		# tag name.  Any redirections made when the (inverted) section
 		# opened are reset when the section closes.
 		"/")
-			echo " / _M_TAG: $_M_TAG, _M_SECTION_TAG: $_M_SECTION_TAG" >&4
+			echo " / _M_TAG: $_M_TAG, _M_SECTION_TAG: $_M_SECTION_TAG" >&3
 			if [ "$_M_TAG" != "$_M_SECTION_TAG" ]
 			then
 				_mustache_die "mismatched closing tag $_M_TAG," \
