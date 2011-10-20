@@ -40,11 +40,10 @@ Deviations from spec
 TODO
 ----
 
-* List sections.
-* Lambdas.
-* Nested sections.
-* Partials.
-* Set delimeter.
+* List sections.  There's no way to differentiate between a list and a value with spaces in it.  This might become more clear when shell commands are supported.
+* Lambdas.  What is this I don't even.
+* Partials.  This is related to supporting shell commands as variables.
+* Set delimeter.  This would be very hard to support in general because of the pervasive assumption that tag delimeters are two characters long.
 
 TODONE
 ------
@@ -53,6 +52,7 @@ TODONE
 * Section tags.
 * Inverted section tags.
 * Comment tags.
+* Nested sections.  Recursion, motherfucker.  Do you speak it?
 
 License
 -------
