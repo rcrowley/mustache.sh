@@ -9,4 +9,8 @@ FOO="foo" BAR="bar"
 
 # Call the `mustache` function, passing a template on standard input and
 # diffing standard output against a known-good copy.
-mustache <"test.mustache" | diff -u - "test.mustache.out"
+find "tests" -type f -name "*.mustache" | while read PATHNAME
+do
+	echo "$PATHNAME" >&2
+	mustache <"$PATHNAME" | diff -u - "$PATHNAME.out"
+done
