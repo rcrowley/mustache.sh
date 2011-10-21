@@ -21,4 +21,13 @@ uninstall:
 test:
 	sh test.sh
 
-.PHONY: all clean install uninstall test
+gh-pages:
+	shocco lib/mustache.sh >mustache.sh.html+
+	git checkout -q gh-pages
+	mv mustache.sh.html+ mustache.sh.html
+	git add mustache.sh.html
+	git commit -m "Rebuilt docs."
+	git push origin gh-pages
+	git checkout -q master
+
+.PHONY: all clean install uninstall test gh-pages
