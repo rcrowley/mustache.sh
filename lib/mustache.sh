@@ -1,6 +1,8 @@
 #!/bin/sh
+
 # mustache.sh, Mustache in POSIX shell
 # ====================================
+
 set -e
 
 # File descriptor 3 is commandeered for debug output, which may end up being
@@ -113,12 +115,16 @@ _mustache() {
 
 					# Any other character becomes part of the variable name.
 					*) _M_TAG="$_M_TAG$_M_C";;
+
 				esac;;
+
 		esac
 
 		# This character becomes the previous character.
 		_M_PREV_C="$_M_C"
+
 	done
+
 }
 
 # Execute a tag surrounded by backticks.  Remove the backticks first.
@@ -210,5 +216,6 @@ _mustache_tag() {
 
 		# TODO Partials.
 		">") _mustache_die "{{>$_M_TAG}} syntax not implemented";;
+
 	esac
 }
