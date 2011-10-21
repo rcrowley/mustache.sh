@@ -52,6 +52,8 @@ _mustache() {
 	# Always start by assuming a character is a literal.
 	_M_STATE="literal"
 
+	# The `read` builtin consumes one line at a time but by now each line
+	# contains only a single character.
 	while read _M_C
 	do
 		echo " _M_C: $_M_C (${#_M_C}), _M_STATE: $_M_STATE" >&3
@@ -112,14 +114,11 @@ _mustache() {
 
 					# Any other character becomes part of the variable name.
 					*) _M_TAG="$_M_TAG$_M_C";;
-
 				esac;;
-
 		esac
 
 		# This character becomes the previous character.
 		_M_PREV_C="$_M_C"
-
 	done
 }
 
@@ -212,6 +211,5 @@ _mustache_tag() {
 
 		# TODO Partials.
 		">") _mustache_die "{{>$_M_TAG}} syntax not implemented";;
-
 	esac
 }
