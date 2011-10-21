@@ -3,6 +3,7 @@
 # mustache.sh, Mustache in POSIX shell
 # ====================================
 
+# Bail.
 set -e
 
 # File descriptor 3 is commandeered for debug output, which may end up being
