@@ -1,7 +1,6 @@
 #!/bin/sh
 
-# mustache.sh, Mustache in POSIX shell
-# ====================================
+# `mustache.sh`, Mustache in POSIX shell.
 
 # Bail.
 set -e
