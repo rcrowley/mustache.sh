@@ -36,7 +36,10 @@ mustache() {
 	# The subtlety is that real newline characters are chomped so they
 	# must be indirectly detected by checking for zero-length
 	# characters, which is done as the character is emitted.
-	sed -r "s/./&\\n/g" | _mustache
+	sed -r "
+		s/./&\\n/g
+		s/\\\\/\\\\\\\\/g
+	" | _mustache
 
 	# TODO Replace the original value of IFS.  Be careful if it's unset.
 
