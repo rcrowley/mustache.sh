@@ -15,13 +15,13 @@ Usage
 
 From the command-line:
 
-	FOO="foo" BAR="bar" mustache.sh <"test.mustache"
+	FOO="foo" BAR="bar" mustache.sh <"tests/test.mustache"
 
 As a library:
 
 	. "lib/mustache.sh"
 	FOO="foo" BAR="bar"
-	mustache <"test.mustache"
+	mustache <"tests/test.mustache"
 
 Spec
 ----
