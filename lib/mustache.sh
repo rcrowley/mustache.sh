@@ -68,13 +68,22 @@ _mustache() {
 			# on by the "tag" state).  If this is the first opening
 			# brace, wait and see.  Otherwise, emit this character.
 			"literal")
-				case "$_M_PREV_C$_M_C" in
-					"{{") _M_STATE="tag" _M_TAG="";;
-					*"{") ;;
-					*)
-						[ "$_M_PREV_C" = "{" ] && printf "%c" "{"
-						[ -z "$_M_C" ] && echo || printf "%c" "$_M_C";;
-				esac >&$_M_FD;;
+				if [ -z "$_M_PREV_C" ]
+				then
+					case "$_M_C" in
+						"{") ;;
+						"") echo;;
+						*) printf "%c" "$_M_C";;
+					esac
+				else
+					case "$_M_PREV_C$_M_C" in
+						"{{") _M_STATE="tag" _M_TAG="";;
+						?"{") ;;
+						*)
+							[ "$_M_PREV_C" = "{" ] && printf "%c" "{"
+							[ -z "$_M_C" ] && echo || printf "%c" "$_M_C";;
+					esac
+				fi >&$_M_FD;;
 
 			# Consume the tag type and tag.
 			"tag")
@@ -93,7 +102,7 @@ _mustache() {
 					# variable name.  Since it's possible that an opening
 					# brace comes in the middle of the tag, check that
 					# this is indeed the beginning of the tag.
-					"{"*)
+					"{"?)
 						if [ -z "$_M_TAG" ]
 						then
 							_M_TAG_TYPE="variable" _M_TAG="$_M_C"
@@ -107,11 +116,11 @@ _mustache() {
 						_mustache_tag;;
 
 					# A single closing brace is ignored at first.
-					*"}") ;;
+					?"}") ;;
 
 					# If the variable continues, the closing brace becomes
 					# part of the variable name.
-					"}"*) _M_TAG="$_M_TAG}";;
+					"}"?) _M_TAG="$_M_TAG}";;
 
 					# Any other character becomes part of the variable name.
 					*) _M_TAG="$_M_TAG$_M_C";;
