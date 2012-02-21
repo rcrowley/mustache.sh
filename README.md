@@ -5,6 +5,8 @@ mustache.sh
 
 There's (as of this writing) only one call to a non-builtin which is probably enough to claim this is fast enough for most uses.
 
+`mustache.sh` requires GNU `sed`(1).
+
 Installation
 ------------
 
