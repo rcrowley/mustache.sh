@@ -73,15 +73,15 @@ _mustache() {
 					case "$_M_C" in
 						"{") ;;
 						"") echo;;
-						*) printf "%c" "$_M_C";;
+						*) printf "%s" "$_M_C";;
 					esac
 				else
 					case "$_M_PREV_C$_M_C" in
 						"{{") _M_STATE="tag" _M_TAG="";;
 						?"{") ;;
 						*)
-							[ "$_M_PREV_C" = "{" ] && printf "%c" "{"
-							[ -z "$_M_C" ] && echo || printf "%c" "$_M_C";;
+							[ "$_M_PREV_C" = "{" ] && printf "%s" "{"
+							[ -z "$_M_C" ] && echo || printf "%s" "$_M_C";;
 					esac
 				fi >&$_M_FD;;
 
