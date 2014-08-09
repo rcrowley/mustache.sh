@@ -36,11 +36,7 @@ mustache() {
 	# The subtlety is that real newline characters are chomped so they
 	# must be indirectly detected by checking for zero-length
 	# characters, which is done as the character is emitted.
-	sed -r "
-		s/./&\\n/g
-		s/\\\\/\\\\\\\\/g
-	" | _mustache
-
+	_mustache_sed | _mustache
 	# TODO Replace the original value of IFS.  Be careful if it's unset.
 
 }
@@ -144,6 +140,40 @@ _mustache_cmd() {
 	sh -c "$_M_CMD"
 }
 
+# Paper over different versions of cat.
+_mustache_cat() {
+	set +e
+	cat -A >/dev/null 2>&1 
+	if [ $? -eq 1 ]; then
+		set -e
+		cat -e
+	else
+		set -e
+		cat -A
+	fi
+}
+
+# Paper over differences between GNU sed and BSD sed
+_mustache_sed() {
+	_M_NEWLINE="
+"
+	set +e
+	sed -r >/dev/null 2>&1 
+	if [ $? -eq 1 ]; then
+		set -e
+		sed -E "
+			s/./&\\${_M_NEWLINE}/g
+			s/\\\\/\\\\\\\\/g
+		"
+	else
+		set -e
+		sed -r "
+			s/./&\\n/g
+			s/\\\\/\\\\\\\\/g
+		"
+	fi
+}
+
 # Print an error message and GTFO.  The message is the concatenation
 # of all the arguments to this function.
 _mustache_die() {
@@ -191,7 +221,7 @@ _mustache_tag() {
 			case "$_M_TAG" in
 				"\`"*"\`")
 					_M_CAPTURE="$(_M_SECTION_TAG="$_M_TAG" _mustache 5>&1 >&4)"
-					echo " _M_CAPTURE: $_M_CAPTURE" | cat -A >&3
+					echo " _M_CAPTURE: $_M_CAPTURE" | _mustache_cat >&3
 					_mustache_cmd "$_M_TAG" | while read _M_LINE
 					do
 						echo " _M_LINE: $_M_LINE" >&3
