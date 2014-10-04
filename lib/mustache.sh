@@ -132,6 +132,18 @@ _mustache() {
 
 }
 
+# Paper over different versions of cat.
+_mustache_cat() {
+	set +e
+	cat -A <"/dev/null" >"/dev/null" 2>&1
+    _M_STATUS="$?"
+	set -e
+	if [ "$_M_STATUS" -eq 1 ]
+    then cat -e
+	else cat -A
+	fi
+}
+
 # Execute a tag surrounded by backticks.  Remove the backticks first.
 _mustache_cmd() {
 	_M_CMD="$*"
@@ -140,17 +152,11 @@ _mustache_cmd() {
 	sh -c "$_M_CMD"
 }
 
-# Paper over different versions of cat.
-_mustache_cat() {
-	set +e
-	cat -A >/dev/null 2>&1 
-	if [ $? -eq 1 ]; then
-		set -e
-		cat -e
-	else
-		set -e
-		cat -A
-	fi
+# Print an error message and GTFO.  The message is the concatenation
+# of all the arguments to this function.
+_mustache_die() {
+	echo "mustache.sh: $*" >&2
+	exit 1
 }
 
 # Paper over differences between GNU sed and BSD sed
@@ -158,27 +164,13 @@ _mustache_sed() {
 	_M_NEWLINE="
 "
 	set +e
-	sed -r >/dev/null 2>&1 
-	if [ $? -eq 1 ]; then
-		set -e
-		sed -E "
-			s/./&\\${_M_NEWLINE}/g
-			s/\\\\/\\\\\\\\/g
-		"
-	else
-		set -e
-		sed -r "
-			s/./&\\n/g
-			s/\\\\/\\\\\\\\/g
-		"
+	sed -r <"/dev/null" >"/dev/null" 2>&1
+    _M_STATUS="$?"
+	set -e
+	if [ "$_M_STATUS" -eq 1 ]
+    then sed -E "s/./&\\$_M_NEWLINE/g; s/\\\\/\\\\\\\\/g"
+	else sed -r "s/./&\\n/g; s/\\\\/\\\\\\\\/g"
 	fi
-}
-
-# Print an error message and GTFO.  The message is the concatenation
-# of all the arguments to this function.
-_mustache_die() {
-	echo "mustache.sh: $*" >&2
-	exit 1
 }
 
 # Process a complete tag.  Variables are emitted, sections are recursed
