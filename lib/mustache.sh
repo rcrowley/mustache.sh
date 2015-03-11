@@ -1,6 +1,11 @@
 # `mustache.sh`, Mustache in POSIX shell.
 
+# Exit immediately if there is an error.
 set -e
+
+# Initialize variables if unset
+: ${MUSTACHE_DEBUG:=""}
+: ${_M_PREV_C:=""}
 
 # File descriptor 3 is commandeered for debug output, which may end up being
 # forwarded to standard error.
