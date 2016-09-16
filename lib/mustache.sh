@@ -136,10 +136,10 @@ _mustache() {
 _mustache_cat() {
 	set +e
 	cat -A <"/dev/null" >"/dev/null" 2>&1
-    _M_STATUS="$?"
+	_M_STATUS="$?"
 	set -e
 	if [ "$_M_STATUS" -eq 1 ]
-    then cat -e
+	then cat -e
 	else cat -A
 	fi
 }
@@ -165,10 +165,10 @@ _mustache_sed() {
 "
 	set +e
 	sed -r <"/dev/null" >"/dev/null" 2>&1
-    _M_STATUS="$?"
+	_M_STATUS="$?"
 	set -e
 	if [ "$_M_STATUS" -eq 1 ]
-    then sed -E "s/./&\\$_M_NEWLINE/g; s/\\\\/\\\\\\\\/g"
+	then sed -E "s/./&\\$_M_NEWLINE/g; s/\\\\/\\\\\\\\/g"
 	else sed -r "s/./&\\n/g; s/\\\\/\\\\\\\\/g"
 	fi
 }
